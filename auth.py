@@ -5,7 +5,9 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 from sqlmodel import Session, select
 
 from database import engine
@@ -19,8 +21,7 @@ ACCESS_TOKEN_EXPIRE_DAYS = 1
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
+security = HTTPBearer()
 
 # -------------------------
 # Password
@@ -63,8 +64,13 @@ def decode_token(token: str):
 # Dependency
 # -------------------------
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> User:
+
+    token = credentials.credentials
     payload = decode_token(token)
+
     email = payload.get("sub")
 
     if not email:
