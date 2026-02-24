@@ -22,9 +22,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-# -----------------------------
-# Password Handling
-# -----------------------------
+# -------------------------
+# Password
+# -------------------------
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -34,9 +34,9 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
-# -----------------------------
-# JWT Handling
-# -----------------------------
+# -------------------------
+# JWT
+# -------------------------
 
 def create_token(email: str) -> str:
     expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
@@ -51,8 +51,7 @@ def create_token(email: str) -> str:
 
 def decode_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,29 +59,23 @@ def decode_token(token: str):
         )
 
 
-# -----------------------------
-# Current User Dependency
-# -----------------------------
+# -------------------------
+# Dependency
+# -------------------------
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     payload = decode_token(token)
-    email: str = payload.get("sub")
+    email = payload.get("sub")
 
-    if email is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload"
-        )
+    if not email:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     with Session(engine) as session:
         user = session.exec(
             select(User).where(User.email == email)
         ).first()
 
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found"
-            )
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
 
         return user
