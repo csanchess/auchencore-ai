@@ -8,6 +8,16 @@ from auth import hash_password, verify_password, create_token, decode_token
 from llm import stream_analysis
 from prompts import AUCHENCORE_SYSTEM_PROMPT
 
+
+from fastapi import FastAPI
+from routers import auth_routes, conversation_routes
+
+app = FastAPI()
+
+app.include_router(auth_routes.router)
+app.include_router(conversation_routes.router)
+
+
 app = FastAPI(title="AuchenCore AI")
 
 app.add_middleware(
@@ -136,3 +146,4 @@ def read_me(current_user = Depends(get_current_user)):
         "email": current_user.email,
         "id": current_user.id
     }
+
