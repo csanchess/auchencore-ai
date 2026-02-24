@@ -6,4 +6,5 @@ passlib[bcrypt]
 python-dotenv
 openai
 python-multipart
+bcrypt==4.0.1
 python-jose[cryptography]
