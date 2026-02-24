@@ -126,3 +126,13 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+from fastapi import Depends
+from auth import get_current_user
+
+@app.get("/me")
+def read_me(current_user = Depends(get_current_user)):
+    return {
+        "email": current_user.email,
+        "id": current_user.id
+    }
